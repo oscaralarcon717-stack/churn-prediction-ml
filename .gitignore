@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+.env
+
+# Datos (pesados, no se suben)
+data/*.csv
+data/*.parquet
+!data/sample_*.csv
+
+# Modelos entrenados
+python/models/*.pkl
+python/models/*.joblib
+
+# Power BI (backups)
+*.pbix.bak
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Sistema operativo windows
+Thumbs.db
