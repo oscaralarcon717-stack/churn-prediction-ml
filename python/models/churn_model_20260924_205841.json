@@ -1,0 +1,84 @@
+{
+  "trained_at_utc": "2026-09-24T20:58:41.773916+00:00",
+  "sklearn_version": "1.9.1",
+  "pandas_version": "3.0.6",
+  "n_rows": 7043,
+  "churn_rate": 0.2653698707936959,
+  "features": [
+    "tenure",
+    "monthly_charges",
+    "total_charges",
+    "senior_citizen",
+    "gender",
+    "partner",
+    "dependents",
+    "phone_service",
+    "multiple_lines",
+    "internet_service",
+    "online_security",
+    "online_backup",
+    "device_protection",
+    "tech_support",
+    "streaming_tv",
+    "streaming_movies",
+    "contract",
+    "paperless_billing",
+    "payment_method"
+  ],
+  "threshold": 0.48376217487363,
+  "cv_metrics": {
+    "roc_auc": 0.8363241892722864,
+    "pr_auc": 0.6350430228157028
+  },
+  "test_metrics": {
+    "roc_auc": 0.8454041695729675,
+    "pr_auc": 0.6557994750052456,
+    "precision": 0.5472061657032755,
+    "recall": 0.7593582887700535,
+    "f1": 0.6360582306830908,
+    "accuracy": 0.7693399574166075
+  },
+  "top_features": [
+    {
+      "feature": "num__tenure",
+      "importance": 0.12761260549145045
+    },
+    {
+      "feature": "num__total_charges",
+      "importance": 0.11307159795565654
+    },
+    {
+      "feature": "cat__contract_Month-to-month",
+      "importance": 0.10945923607865382
+    },
+    {
+      "feature": "num__monthly_charges",
+      "importance": 0.0865417259135481
+    },
+    {
+      "feature": "cat__contract_Two year",
+      "importance": 0.05456195554679337
+    },
+    {
+      "feature": "cat__online_security_No",
+      "importance": 0.05431530744772647
+    },
+    {
+      "feature": "cat__internet_service_Fiber optic",
+      "importance": 0.04453311395921675
+    },
+    {
+      "feature": "cat__tech_support_No",
+      "importance": 0.04447442463870636
+    },
+    {
+      "feature": "cat__payment_method_Electronic check",
+      "importance": 0.03550034372933995
+    },
+    {
+      "feature": "cat__online_backup_No",
+      "importance": 0.019696117520872993
+    }
+  ],
+  "version": "20260924_205841"
+}
