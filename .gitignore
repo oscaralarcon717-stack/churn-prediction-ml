@@ -16,8 +16,8 @@ python/models/*.pkl
 python/models/*.joblib
 
 # Power BI (backups)
+*.pbix
 *.pbix.bak
-
 # IDE
 .vscode/
 .idea/

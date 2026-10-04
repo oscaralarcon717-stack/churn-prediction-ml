@@ -1,6 +1,9 @@
 #  Churn Prediction ML Pipeline
 
 Pipeline end-to-end para predecir abandono de clientes usando Python, SQL, n8n y Power BI.
+## 📸 Vista previa del Dashboard
+
+![Dashboard Churn](bi/dashboard_preview.png)
 
 ##  Stack Tecnológico
 - **n8n**: Automatización de ingesta
