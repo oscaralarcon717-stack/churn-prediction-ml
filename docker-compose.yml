@@ -4,9 +4,9 @@ services:
     container_name: churn_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Mi123Contraseña
-      POSTGRES_DB: churn_db
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-churn_db}
     ports:
       - "5432:5432"
     volumes:

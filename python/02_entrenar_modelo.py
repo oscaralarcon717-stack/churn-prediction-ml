@@ -50,7 +50,7 @@ from sqlalchemy.engine import URL
 logger = logging.getLogger("churn.train")
 
 # ============================================================
-# CONSTANTES (todo lo "configurable" vive aquí, arriba del archivo)
+# CONSTANTES (todo lo "configurable" )
 # ============================================================
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
