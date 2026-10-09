@@ -1,0 +1,84 @@
+{
+  "trained_at_utc": "2026-10-08T18:16:11.100754+00:00",
+  "sklearn_version": "1.9.1",
+  "pandas_version": "3.0.6",
+  "n_rows": 7070,
+  "churn_rate": 0.2528995756718529,
+  "features": [
+    "tenure",
+    "monthly_charges",
+    "total_charges",
+    "senior_citizen",
+    "gender",
+    "partner",
+    "dependents",
+    "phone_service",
+    "multiple_lines",
+    "internet_service",
+    "online_security",
+    "online_backup",
+    "device_protection",
+    "tech_support",
+    "streaming_tv",
+    "streaming_movies",
+    "contract",
+    "paperless_billing",
+    "payment_method"
+  ],
+  "threshold": 0.4880038165939096,
+  "cv_metrics": {
+    "roc_auc": 0.7737968255123958,
+    "pr_auc": 0.5504730477839008
+  },
+  "test_metrics": {
+    "roc_auc": 0.774764051125783,
+    "pr_auc": 0.5681386988065753,
+    "precision": 0.4936708860759494,
+    "recall": 0.6536312849162011,
+    "f1": 0.5625,
+    "accuracy": 0.7425742574257426
+  },
+  "top_features": [
+    {
+      "feature": "num__total_charges",
+      "importance": 0.1651486864018333
+    },
+    {
+      "feature": "num__tenure",
+      "importance": 0.16033487616009875
+    },
+    {
+      "feature": "num__monthly_charges",
+      "importance": 0.10536616375749656
+    },
+    {
+      "feature": "cat__contract_Month-to-month",
+      "importance": 0.06279943273690819
+    },
+    {
+      "feature": "cat__internet_service_Fiber optic",
+      "importance": 0.03308397795592937
+    },
+    {
+      "feature": "cat__online_security_No",
+      "importance": 0.032522500663612064
+    },
+    {
+      "feature": "cat__tech_support_No",
+      "importance": 0.03218023222060315
+    },
+    {
+      "feature": "cat__contract_Two year",
+      "importance": 0.027535861040320943
+    },
+    {
+      "feature": "cat__payment_method_Electronic check",
+      "importance": 0.026771615604268294
+    },
+    {
+      "feature": "cat__paperless_billing_Yes",
+      "importance": 0.016111002566057568
+    }
+  ],
+  "version": "20261008_181611"
+}

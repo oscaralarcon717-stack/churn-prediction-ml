@@ -27,3 +27,6 @@ python/models/*.joblib
 
 # Sistema operativo windows
 Thumbs.db
+# Logs de automatización
+logs/
+*.log

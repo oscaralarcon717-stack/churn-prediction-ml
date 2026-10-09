@@ -1,0 +1,84 @@
+{
+  "trained_at_utc": "2026-10-08T17:42:46.619243+00:00",
+  "sklearn_version": "1.9.1",
+  "pandas_version": "3.0.6",
+  "n_rows": 7070,
+  "churn_rate": 0.2561527581329561,
+  "features": [
+    "tenure",
+    "monthly_charges",
+    "total_charges",
+    "senior_citizen",
+    "gender",
+    "partner",
+    "dependents",
+    "phone_service",
+    "multiple_lines",
+    "internet_service",
+    "online_security",
+    "online_backup",
+    "device_protection",
+    "tech_support",
+    "streaming_tv",
+    "streaming_movies",
+    "contract",
+    "paperless_billing",
+    "payment_method"
+  ],
+  "threshold": 0.49693910818041076,
+  "cv_metrics": {
+    "roc_auc": 0.7913139115638057,
+    "pr_auc": 0.5838672172171512
+  },
+  "test_metrics": {
+    "roc_auc": 0.7929187761275549,
+    "pr_auc": 0.5682694439492085,
+    "precision": 0.5117773019271948,
+    "recall": 0.6602209944751382,
+    "f1": 0.5765983112183354,
+    "accuracy": 0.7517680339462518
+  },
+  "top_features": [
+    {
+      "feature": "num__total_charges",
+      "importance": 0.16210096587119935
+    },
+    {
+      "feature": "num__tenure",
+      "importance": 0.15404093767986432
+    },
+    {
+      "feature": "num__monthly_charges",
+      "importance": 0.09998710449761107
+    },
+    {
+      "feature": "cat__contract_Month-to-month",
+      "importance": 0.07396913589538029
+    },
+    {
+      "feature": "cat__tech_support_No",
+      "importance": 0.038938233083154784
+    },
+    {
+      "feature": "cat__online_security_No",
+      "importance": 0.036889251345948795
+    },
+    {
+      "feature": "cat__contract_Two year",
+      "importance": 0.03192941420302759
+    },
+    {
+      "feature": "cat__payment_method_Electronic check",
+      "importance": 0.02954204282031251
+    },
+    {
+      "feature": "cat__internet_service_Fiber optic",
+      "importance": 0.023924133649802098
+    },
+    {
+      "feature": "cat__device_protection_No",
+      "importance": 0.01678510503624476
+    }
+  ],
+  "version": "20261008_174246"
+}
