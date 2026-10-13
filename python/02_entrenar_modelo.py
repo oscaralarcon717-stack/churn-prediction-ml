@@ -1,5 +1,5 @@
 """
-Entrenamiento del modelo de predicción de churn.
+Entrenamiento del modelo de predicción de churn (versión producción).
 
 Flujo:
     1. Lee la configuración desde variables de entorno (.env)
@@ -9,8 +9,6 @@ Flujo:
     5. Elige el umbral de decisión usando validación cruzada (solo con train)
     6. Entrena el modelo final y lo evalúa en test (datos que nunca vio)
     7. Guarda el modelo + metadata versionados en models/
-
-
 """
 from __future__ import annotations
 
@@ -45,60 +43,33 @@ from sklearn.model_selection import StratifiedKFold, cross_val_predict, train_te
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sqlalchemy import create_engine
-from sqlalchemy.engine import URL
+
+from config import (
+    CATEGORICAL_COLS,
+    FEATURE_COLS,
+    ID_COL,
+    MODEL_DIR,
+    NUMERICAL_COLS,
+    TABLE_CLIENTES,
+    TARGET_COL,
+    build_db_url,
+)
 
 logger = logging.getLogger("churn.train")
 
 # ============================================================
-# CONSTANTES (todo lo "configurable" )
+# CONSTANTES (todo lo "configurable" vive aquí, arriba del archivo)
 # ============================================================
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 N_FOLDS = 5
-MIN_ROC_AUC_TO_PROMOTE = 0.75  # si el modelo rinde menos que esto, NO se marca como "latest"
-
-MODEL_DIR = Path(__file__).resolve().parent / "models"
-
-TABLE_NAME = "clientes_raw"
-ID_COL = "customer_id"
-TARGET_COL = "churn"
-
-# Listas EXPLÍCITAS: si aparece una columna nueva en la BD, no entra al modelo por accidente.
-NUMERICAL_COLS = ["tenure", "monthly_charges", "total_charges", "senior_citizen"]
-CATEGORICAL_COLS = [
-    "gender", "partner", "dependents", "phone_service", "multiple_lines",
-    "internet_service", "online_security", "online_backup", "device_protection",
-    "tech_support", "streaming_tv", "streaming_movies", "contract",
-    "paperless_billing", "payment_method",
-]
-FEATURE_COLS = NUMERICAL_COLS + CATEGORICAL_COLS
+MIN_ROC_AUC_TO_PROMOTE = 0.80  # si el modelo rinde menos que esto, NO se marca como "latest" (subido de 0.75 tras detectar degradación por simulaciones sin ponderar)
 
 
-# ============================================================
-# 1. CONFIGURACIÓN Y DATOS
-# ============================================================
-def build_db_url() -> URL:
-    """Construye la URL de conexión validando que estén todas las variables."""
-    required = ["DB_USER", "DB_PASSWORD", "DB_HOST", "DB_PORT", "DB_NAME"]
-    missing = [name for name in required if not os.getenv(name)]
-    if missing:
-        raise EnvironmentError(f"Faltan variables de entorno: {', '.join(missing)}")
-
-    # URL.create escapa bien caracteres raros en la contraseña (@, #, /, etc.)
-    return URL.create(
-        drivername="postgresql",
-        username=os.environ["DB_USER"],
-        password=os.environ["DB_PASSWORD"],
-        host=os.environ["DB_HOST"],
-        port=int(os.environ["DB_PORT"]),
-        database=os.environ["DB_NAME"],
-    )
-
-
-def load_data(db_url: URL) -> pd.DataFrame:
+def load_data(db_url) -> pd.DataFrame:
     """Lee la tabla de clientes desde PostgreSQL."""
     columns = [ID_COL, *FEATURE_COLS, TARGET_COL]
-    query = f"SELECT {', '.join(columns)} FROM {TABLE_NAME}"  # noqa: S608 (solo constantes)
+    query = f"SELECT {', '.join(columns)} FROM {TABLE_CLIENTES}"  # noqa: S608 (solo constantes)
 
     engine = create_engine(db_url)
     try:
@@ -237,6 +208,23 @@ def top_feature_importances(pipeline: Pipeline, top_n: int = 10) -> list[dict]:
 # ============================================================
 # 4. GUARDADO
 # ============================================================
+def get_current_latest_auc() -> float | None:
+    """
+    Lee el ROC-AUC del modelo actualmente promovido (si existe), para poder
+    comparar al candidato nuevo contra él. None si todavía no hay 'latest'
+    (primer entrenamiento) o si el artefacto está dañado/incompleto.
+    """
+    latest_path = MODEL_DIR / "churn_model_latest.pkl"
+    if not latest_path.exists():
+        return None
+    try:
+        artefacto = joblib.load(latest_path)
+        return float(artefacto["metadata"]["test_metrics"]["roc_auc"])
+    except Exception:
+        logger.warning("No se pudo leer el ROC-AUC de churn_model_latest.pkl; se ignora en la comparación")
+        return None
+
+
 def save_artifact(pipeline: Pipeline, threshold: float, metadata: dict) -> Path:
     """Guarda modelo + umbral + metadata, con versión por fecha."""
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -254,14 +242,29 @@ def save_artifact(pipeline: Pipeline, threshold: float, metadata: dict) -> Path:
     meta_path.write_text(json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info("Modelo guardado: %s", model_path)
 
-    # "Quality gate": solo se promueve a 'latest' si supera el mínimo aceptable
-    if metadata["test_metrics"]["roc_auc"] >= MIN_ROC_AUC_TO_PROMOTE:
+    # "Quality gate" tipo champion-challenger: el candidato debe (1) superar el
+    # piso mínimo absoluto Y (2) no ser peor que el modelo actualmente promovido.
+    # Sin el punto (2), un modelo mediocre podría reemplazar a uno mejor con
+    # solo pasar el piso -> esto es lo que garantiza "siempre la mejor versión".
+    candidate_auc = metadata["test_metrics"]["roc_auc"]
+    current_auc = get_current_latest_auc()
+
+    meets_floor = candidate_auc >= MIN_ROC_AUC_TO_PROMOTE
+    beats_current = current_auc is None or candidate_auc >= current_auc
+
+    if meets_floor and beats_current:
         shutil.copy2(model_path, MODEL_DIR / "churn_model_latest.pkl")
         logger.info("Modelo promovido a churn_model_latest.pkl")
+    elif not meets_floor:
+        logger.warning(
+            "ROC-AUC %.3f < %.2f (piso mínimo): NO se promueve. Revisa los datos.",
+            candidate_auc, MIN_ROC_AUC_TO_PROMOTE,
+        )
     else:
         logger.warning(
-            "ROC-AUC %.3f < %.2f: NO se promueve a 'latest'. Revisa los datos.",
-            metadata["test_metrics"]["roc_auc"], MIN_ROC_AUC_TO_PROMOTE,
+            "ROC-AUC %.3f no supera al modelo actual (%.3f): NO se promueve, "
+            "se conserva el 'latest' existente.",
+            candidate_auc, current_auc,
         )
     return model_path
 

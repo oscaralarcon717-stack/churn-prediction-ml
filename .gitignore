@@ -30,3 +30,5 @@ Thumbs.db
 # Logs de automatización
 logs/
 *.log
+# Backups locales
+*.bak
