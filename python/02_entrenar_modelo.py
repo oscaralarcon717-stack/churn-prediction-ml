@@ -245,7 +245,7 @@ def save_artifact(pipeline: Pipeline, threshold: float, metadata: dict) -> Path:
     # "Quality gate" tipo champion-challenger: el candidato debe (1) superar el
     # piso mínimo absoluto Y (2) no ser peor que el modelo actualmente promovido.
     # Sin el punto (2), un modelo mediocre podría reemplazar a uno mejor con
-    # solo pasar el piso -> esto es lo que garantiza "siempre la mejor versión".
+    # solo pasar el piso -> esto es lo que garantiza  la mejor versión
     candidate_auc = metadata["test_metrics"]["roc_auc"]
     current_auc = get_current_latest_auc()
 

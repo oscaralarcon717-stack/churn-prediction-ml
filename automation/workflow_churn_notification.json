@@ -1,0 +1,130 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 10,
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "149a5ff3-7a5d-4e19-b1a9-98d90124816a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "6766329639",
+        "text": "=🚨 *ALERTA DE RETENCIÓN*\n\n🎯 *Reporte de Churn*\n\n📊 *Clientes por nivel:*\n\n🔴 *Alto:*  {{ $json.alto_clientes }} clientes\n   • Ingresos: ${{ $json.alto_ingresos }}/mes\n   • 💸 Pérdida esperada: ${{ $json.alto_perdida }}/mes\n\n🟡 *Medio:* {{ $json.medio_clientes }} clientes\n   • Ingresos: ${{ $json.medio_ingresos }}/mes\n   • 💸 Pérdida esperada: ${{ $json.medio_perdida }}/mes\n\n🟢 *Bajo:*  {{ $json.bajo_clientes }} clientes\n   • Ingresos: ${{ $json.bajo_ingresos }}/mes\n   • 💸 Pérdida esperada: ${{ $json.bajo_perdida }}/mes\n\n━━━━━━━━━━━━━━━━━━\n👥 *Total clientes activos:* {{ $json.total_clientes }}\n\n📉 *Pérdida esperada total:*\n   • Mensual: ${{ $json.perdida_esperada_total }}\n   • Anual: ${{ $json.perdida_esperada_anual }}\n\n⚠️ *Acción prioritaria:*\n   Contactar los {{ $json.alto_clientes }} clientes en riesgo ALTO.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ce274a47-4816-41e7-9871-0ee90c75abe3",
+      "name": "Send a text message",
+      "webhookId": "0cdb731c-ac4e-47ae-ad70-0752cef454c5",
+      "credentials": {
+        "telegramApi": {
+          "id": "lY1SXaAUEUSL74iA",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    p.risk_level,\n    COUNT(*) AS total_clientes,\n    ROUND(SUM(c.monthly_charges), 2) AS ingresos_totales,\n    ROUND(SUM(c.monthly_charges * p.churn_probability), 2) AS perdida_esperada\nFROM predicciones_churn p\nJOIN clientes_raw c USING (customer_id)\nGROUP BY p.risk_level\nORDER BY \n    CASE p.risk_level \n        WHEN 'Alto' THEN 1 \n        WHEN 'Medio' THEN 2 \n        ELSE 3 \n    END;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "1e7ed501-59c2-4221-8a1e-ce362d458ea6",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "njUbGzXBPePMnKIi",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\n\nconst findLevel = (level) => rows.find(r => r.risk_level === level) \n  || { total_clientes: \"0\", ingresos_totales: \"0\", perdida_esperada: \"0\" };\n\nconst alto = findLevel('Alto');\nconst medio = findLevel('Medio');\nconst bajo = findLevel('Bajo');\n\nconst totalClientes = Number(alto.total_clientes) + Number(medio.total_clientes) + Number(bajo.total_clientes);\n\n// Pérdida esperada TOTAL (suma ponderada por probabilidad)\nconst perdidaTotal = (\n  Number(alto.perdida_esperada) +\n  Number(medio.perdida_esperada) +\n  Number(bajo.perdida_esperada)\n).toFixed(2);\n\n// Pérdida esperada ANUAL\nconst perdidaTotalAnual = (Number(perdidaTotal) * 12).toFixed(2);\n\nreturn [{\n  json: {\n    alto_clientes: alto.total_clientes,\n    alto_ingresos: alto.ingresos_totales,\n    alto_perdida: alto.perdida_esperada,\n    \n    medio_clientes: medio.total_clientes,\n    medio_ingresos: medio.ingresos_totales,\n    medio_perdida: medio.perdida_esperada,\n    \n    bajo_clientes: bajo.total_clientes,\n    bajo_ingresos: bajo.ingresos_totales,\n    bajo_perdida: bajo.perdida_esperada,\n    \n    total_clientes: String(totalClientes),\n    perdida_esperada_total: perdidaTotal,\n    perdida_esperada_anual: perdidaTotalAnual\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "78dc0656-ce98-45b0-b84f-771f5ad4f025",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0e605335-7c72-432e-8388-0dfcb0de614b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bcea86e3f186790d72cff554af825c2db81991ee5aa58c6f6a7761def55f1102"
+  },
+  "nodeGroups": [],
+  "id": "1JyK3quPtoFKpC4b",
+  "tags": []
+}
